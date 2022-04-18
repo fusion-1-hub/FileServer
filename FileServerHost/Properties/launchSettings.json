@@ -1,0 +1,14 @@
+﻿{
+  "profiles": {
+    "Fusion1.FileServerHost": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "externalUrlConfiguration": true,
+      "applicationUrl": "http://localhost:5010;https://localhost:7073",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Fusion1.FileServerClient": {
+      "commandName": "Project",
+      "commandLineArgs": "-u https://DESWIK-48:5001 -t Down -f pancakes.jpg"
+    }
+  }
+}

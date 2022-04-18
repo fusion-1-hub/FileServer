@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option csharp_namespace = "Fusion1.FileServerHost.FileService";
+
+service DownloadFileService {
+  rpc DownloadFile (DownloadFileRequest) returns (stream DownloadFileResponse);
+}
+
+message DownloadFileRequest {
+	string file_name = 1;
+}
+
+message DownloadFileResponse {
+	bytes data = 1;
+}
