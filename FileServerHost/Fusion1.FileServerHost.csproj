@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-    <!--<PublishAot>true</PublishAot>-->
     <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -11,25 +10,30 @@
     <Copyright>Copyright © Fusion-1 Pty Ltd</Copyright>
     <ApplicationIcon>Resources\fusion1.ico</ApplicationIcon>
     <DebugType>full</DebugType>
-    <SignAssembly>False</SignAssembly>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!--<ItemGroup>
     <None Remove="Content\css\swagger-mycustom.css" />
     <None Remove="Content\images\fusion-1-logo-w.png" />
     <None Remove="Content\images\logo.png" />
     <None Remove="Content\swagger-mycustom.css" />
     <None Remove="Protos\DownloadFileService.proto" />
     <None Remove="Protos\UploadFileService.proto" />
+  </ItemGroup>-->
+
+  <ItemGroup>
+    <Content Include="Content\css\swagger-mycustom.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Content\css\swagger-mycustom.css" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Content\images\fusion-1-logo-w.png" />
-    <EmbeddedResource Include="Content\images\logo.png" />
+    <Content Include="Content\images\fusion-1-logo-w.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\images\logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -38,21 +42,21 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
-    <PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.49.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="7.0.0-rc.2.22472.3" />
-    <PackageReference Include="Serilog.AspNetCore" Version="6.1.0-dev-00285" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.52.0" />
+    <PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.52.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="7.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
     <PackageReference Include="Serilog.Expressions" Version="3.4.1" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00896" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.EventLog" Version="3.1.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00947" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-    <PackageReference Include="System.Management" Version="7.0.0-rc.2.22472.3" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="System.Management" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Fusion1.Resman">
-      <HintPath>..\..\..\LicenseManagement\Fusion1.Resman\bin\Release\net6.0\Fusion1.Resman.dll</HintPath>
+      <HintPath>..\References\Fusion1.Resman.dll</HintPath>
     </Reference>
   </ItemGroup>
 

@@ -2,7 +2,7 @@
   "profiles": {
     "Fusion1.FileServerClient": {
       "commandName": "Project",
-      "commandLineArgs": "-u https://DESWIK-48:5001 -t Down -f pancakes.jpg"
+      "commandLineArgs": "-u https://per-test-ent1.deswik.internal:5001 -t Up -f F1-W1.vhdx"
     }
   }
 }

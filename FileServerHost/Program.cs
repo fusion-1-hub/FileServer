@@ -36,7 +36,7 @@ if (File.Exists($"{programData}/Fusion-1/license/license.lic"))
         out _msg);
     if (_status != Fusion1.Resman.Resman.Status.VALID)
     {
-        System.Environment.Exit(1);
+        Environment.Exit(1);
     }
 }
 else
@@ -47,7 +47,7 @@ else
                   $"Send the following UUID '{uuid}' to your software " +
                   "vendor to obtain the necessary license.";
     Log.ForContext<Program>().Information(message);
-    System.Environment.Exit(1);
+    Environment.Exit(1);
 }
 
 

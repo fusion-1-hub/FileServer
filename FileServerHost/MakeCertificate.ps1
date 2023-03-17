@@ -1,3 +1,12 @@
+# Self-elevate the script if required
+if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
+ if ([int](Get-CimInstance -Class Win32_OperatingSystem | Select-Object -ExpandProperty BuildNumber) -ge 6000) {
+  $CommandLine = "-File `"" + $MyInvocation.MyCommand.Path + "`" " + $MyInvocation.UnboundArguments
+  Start-Process -FilePath PowerShell.exe -Verb Runas -ArgumentList $CommandLine
+  Exit
+ }
+}
+
 $MyHostname = $Env:COMPUTERNAME
 
 # setup certificate properties including the commonName (DNSName) property for Chrome 58+
@@ -42,3 +51,8 @@ Import-Certificate -FilePath $cerFilePath -CertStoreLocation Cert:\LocalMachine\
 Remove-Item -Path $certificatePath
 Remove-Item $pfxFilePath
 Remove-Item $cerFilePath
+
+Write-Output $certificate.ThumbPrint
+
+Write-Host "Press any key to continue..."
+$Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
