@@ -1,53 +1,69 @@
 using Fusion1.FileServerHost.ExceptionHandler;
-using Fusion1.FileServerHost.FileService;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Serilog;
 using Serilog.Filters;
+using Serilog.Sinks.Syslog;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.FileProviders;
 
 var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .WriteTo.Console()
-    .WriteTo.File(
-            path: $"{programData}/Fusion-1/logs/FileServerHost-.log", 
-            rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 7,
-            outputTemplate: "{Timestamp:o} [{Level:u3}] ({SourceContext}) {Message}{NewLine}{Exception}")
-    .WriteTo.Logger(lc => lc 
-        .Filter.ByIncludingOnly(Matching.FromSource("Program"))
-        .WriteTo.EventLog(
-            "Fusion-1 File Server Host",
-            outputTemplate: "{Message}{NewLine}{Exception}"))
-    .CreateBootstrapLogger();
+  .Enrich.FromLogContext()
+  .WriteTo.Console()
+  .WriteTo.File(
+          path: $"{programData}/Fusion-1/logs/FileServerHost-.log",
+          rollingInterval: RollingInterval.Day,
+          retainedFileCountLimit: 7,
+          outputTemplate: "{Timestamp:o} [{Level:u3}] ({SourceContext}) {Message}{NewLine}{Exception}")
+  .WriteTo.Logger(lc =>
+    {
+      lc.Filter.ByIncludingOnly(Matching.FromSource("Program"));
+      if (OperatingSystem.IsWindows())
+      {
+        lc.WriteTo.EventLog(source: "Fusion-1 File Server Host",
+                            logName: "Application",
+                            outputTemplate: "{Message}{NewLine}{Exception}");
+      }
+      else if (OperatingSystem.IsLinux())
+      {
+        lc.WriteTo.LocalSyslog(appName: "Fusion-1 File Server Host",
+                                facility: Facility.Local0,
+                                outputTemplate: "{Message}{NewLine}{Exception}");
+      }
+      else
+      {
+        lc.WriteTo.Console();
+      }
+    }
+  )
+  .CreateBootstrapLogger();
 Log.ForContext<Program>().Information("Application is starting up...");
 
 //Check if the XML license file exists
 if (File.Exists($"{programData}/Fusion-1/license/license.lic"))
 {
-    var _status = Fusion1.Resman.Resman.Status.UNDEFINED;
-    var _msg = "";
-    var _lic = (Fusion1.Resman.Resource)Fusion1.Resman.Resman.ParseResourceString(
-        typeof(Fusion1.Resman.Resource),
-        File.ReadAllText($"{programData}/Fusion-1/license/license.lic"),
-        out _status,
-        out _msg);
-    if (_status != Fusion1.Resman.Resman.Status.VALID)
-    {
-        Environment.Exit(1);
-    }
+  var _status = Fusion1.Resman.Resman.Status.UNDEFINED;
+  var _msg = "";
+  var _lic = (Fusion1.Resman.Resource)Fusion1.Resman.Resman.ParseResourceString(
+      typeof(Fusion1.Resman.Resource),
+      File.ReadAllText($"{programData}/Fusion-1/license/license.lic"),
+      out _status,
+      out _msg);
+  if (_status != Fusion1.Resman.Resman.Status.VALID)
+  {
+      Environment.Exit(1);
+  }
 }
 else
 {
-    var uuid = Fusion1.Resman.Resman.GenerateUID(typeof(Program).Assembly.GetName().Name);
-    var message = "This application requires a license.lic file " + 
-                  $"in the {programData}\\Fusion-1\\license folder. " + 
-                  $"Send the following UUID '{uuid}' to your software " +
-                  "vendor to obtain the necessary license.";
-    Log.ForContext<Program>().Information(message);
-    Environment.Exit(1);
+  var uuid = Fusion1.Resman.Resman.GenerateUID(typeof(Program).Assembly.GetName().Name ?? "Fusion1.FileServerHost");
+  var message = "This application requires a license.lic file " + 
+                $"in the {programData}\\Fusion-1\\license folder. " + 
+                $"Send the following UUID '{uuid}' to your software " +
+                "vendor to obtain the necessary license.";
+  Log.ForContext<Program>().Information(message);
+  Environment.Exit(1);
 }
 
 
@@ -68,19 +84,37 @@ try
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7,
                 outputTemplate: "{Timestamp:o} [{Level:u3}] ({SourceContext}) {Message}{NewLine}{Exception}")
-        .WriteTo.Logger(lc => lc
-            .Filter.ByIncludingOnly(Matching.FromSource("Program"))
-            .WriteTo.EventLog(
-                "Fusion-1 File Server Host",
-                outputTemplate: "{Message}{NewLine}{Exception}"))
+        .WriteTo.Logger(lc =>
+          {
+            lc.Filter.ByIncludingOnly(Matching.FromSource("Program"));
+            if (OperatingSystem.IsWindows())
+            {
+              lc.WriteTo.EventLog(source: "Fusion-1 File Server Host",
+                                  logName: "Application",
+                                  outputTemplate: "{Message}{NewLine}{Exception}");
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+              lc.WriteTo.LocalSyslog(appName: "Fusion-1 File Server Host",
+                                    facility: Facility.Local0,
+                                    outputTemplate: "{Message}{NewLine}{Exception}");
+            }
+            else
+            {
+              lc.WriteTo.Console();
+            }
+          }
+        )
         .ReadFrom.Configuration(ctx.Configuration))
         .UseWindowsService();
 
     builder.WebHost.ConfigureKestrel((context, serverOptions) =>
     {
-        serverOptions.ConfigureEndpointDefaults(listenOptions =>
+      var thumbprint = context.Configuration["CertificateThumbprint"]
+        ?? throw new InvalidOperationException("CertificateThumbprint is missing from configuration.");
+      serverOptions.ConfigureEndpointDefaults(listenOptions =>
         {
-            listenOptions.UseHttps(GetHttpsCertificateFromLocalMachineStore(context.Configuration["CertificateThumbprint"]));
+          listenOptions.UseHttps(GetHttpsCertificateFromLocalMachineStore(thumbprint));
         });
     });
 
@@ -116,24 +150,8 @@ try
     app.UseRouting();
     app.UseSwagger();
 
-    app.UseEndpoints(endpoints =>
-    {
-    //endpoints.MapMagicOnionHttpGateway("_", app.Services.GetService<MagicOnion.Server.MagicOnionServiceDefinition>().MethodHandlers, GrpcChannel.ForAddress("https://localhost:5001"));
-    //endpoints.MapMagicOnionSwagger("swagger", app.Services.GetService<MagicOnion.Server.MagicOnionServiceDefinition>().MethodHandlers, "/_/");
-    endpoints.MapGrpcService<FileServiceUpload>();
-        endpoints.MapGrpcService<FileServiceDownload>();
-        endpoints.MapGrpcReflectionService();
-        //endpoints.MapGet("/", async context =>
-        //{
-        //    await context.Response.WriteAsync("Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
-        //});
-    });
-    //app.MapPost("/todoitems", async ([FromServices] TodoDbContext dbContext, TodoItem todoItem) =>
-    //{
-    //    //dbContext.TodoItems.Add(todoItem);
-    //    //await dbContext.SaveChangesAsync();
-    //    //return Results.Created($"/todoitems/{todoItem.Id}", todoItem);
-    //});
+
+
 
     app.UseSwaggerUI(options =>
     {

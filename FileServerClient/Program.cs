@@ -10,13 +10,13 @@ public enum TransferDirection
 public class Options
 {
     [Option('u', "URL", Required = true, Default = "https://localhost:5001", HelpText = "File Server URL in format https://[HostName]:[Port].")]
-    public string URL { get; set; }
+    public string URL { get; set; } = null!;
 
     [Option('t', "TransferDirection", Required = true, HelpText = "Transfer direction Up for Upload Down for download.")]
     public TransferDirection TransferDirection { get; set; }
 
     [Option('f', "FileName", Required = true, HelpText = "File name with path if necessary.")]
-    public string FileName { get; set; }
+    public string FileName { get; set; } = null!;
 
     [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
     public bool Verbose { get; set; }

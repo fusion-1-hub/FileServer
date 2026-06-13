@@ -26,7 +26,7 @@ namespace Fusion1.FileServerHost.ExceptionHandler
                 _logger.LogError(e, $"An error occured when calling {context.Method}");
                 var httpContext = context.GetHttpContext();
                 httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                throw new RpcException(new Status(StatusCode.Internal, e.StackTrace));
+                throw new RpcException(new Status(StatusCode.Internal, e.StackTrace ?? "No stack trace available"));
             }
         }
     }
